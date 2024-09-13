@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10 Day Vipassana Course - Last Day (English)</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Font Awesome JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+
+    <!-- Navigation Header -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Equimoose</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav mr-auto">
+                
+                <li class="nav-item">
+                    <a class="nav-link" href="/index.html">Home</a>
+                </li>
+                
+                
+                <li class="nav-item">
+                    <a class="nav-link" href="/vipassana/s_n_goenka/_10_day_vipassana_course/day_10_english.html"><i class="fas fa-angle-double-left"></i> Previous</a>
+                </li>
+                
+                
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+    
+<h1>10 Day Vipassana Course - Last Day (English)</h1>
+
+<!-- YouTube Video -->
+<!-- <div class="video-container">
+    <iframe
+        width="560"
+        height="315"
+        src="https://www.youtube.com/watch?v=aeqCeU8Abng&list=PLPJVlVRVmhc4Z01fD57jbzycm9I6W054x&index=11"
+        title="YouTube video player"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+    ></iframe>
+</div> -->
+
+<!-- Watch on YouTube Link -->
+<div class="video-container">
+    <p><a href="https://www.youtube.com/watch?v=aeqCeU8Abng&list=PLPJVlVRVmhc4Z01fD57jbzycm9I6W054x&index=11" target="_blank">Watch on youtube</a></p>
+</div>
+
+
+<div id="content"></div>
+
+<script>
+    fetch("https://raw.githubusercontent.com/equimoose/meditation/main/vipassana/S.N.Goenka/10%20Day%20Vipassana%20Course%20-%20Last%20Day%20%20(English).txt")
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById("content").innerText = data;
+        })
+        .catch(error => console.error("Error fetching the file:", error));
+</script>
+
+    </div>
+
+</body>
+</html>

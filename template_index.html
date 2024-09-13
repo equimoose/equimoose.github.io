@@ -1,0 +1,14 @@
+{% extends "template_base.html" %}
+
+{% block title %}Equimoose{% endblock %}
+
+{% block content %}
+<h1>Welcome to Equimoose's site</h1>
+
+<h3>Contents</h3>
+<ul>
+    {% for link in links %}
+        <li><a href=".{{ link.relative_path_to_file }}">{{ link.name }}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}
