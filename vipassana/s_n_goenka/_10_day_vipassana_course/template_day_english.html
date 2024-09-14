@@ -25,14 +25,10 @@
 </div>
 
 
-<div id="content"></div>
+<div id="content" class="mb-5">{{ transcribed_content }}</div>
 
-<script>
-    fetch("{{ transcribed_discourse_url }}")
-        .then(response => response.text())
-        .then(data => {
-            document.getElementById("content").innerText = data;
-        })
-        .catch(error => console.error("Error fetching the file:", error));
-</script>
+<!-- <script>
+    const transcribed_discourse_url = "{{ transcribed_discourse_url }}"
+    // Include ./vipassana/s_n_goenka/_10_day_vipassana_course/script.js {% include "./vipassana/s_n_goenka/_10_day_vipassana_course/script.js" %}
+</script> -->
 {% endblock %}
