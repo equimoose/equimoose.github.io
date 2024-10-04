@@ -1,14 +1,22 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
+import json
 import os
 import re
-from typing import Literal
+from typing import Any, Literal
 
 from jinja2 import Environment
 import requests
 
 
 dir_path = os.path.dirname(__file__)
+
+@dataclass
+class Line():
+    line_number: int = -1
+    time: str = ""
+    seconds: int = 0
+    text: str = ""
 
 
 @dataclass
@@ -60,20 +68,13 @@ class Day:
             file.write(f"# Last fetched: {datetime.now(timezone.utc).isoformat()}\n\n")
             file.write(response.text)
 
-    def get_transcribed_discourse(self) -> str:
+    def get_transcribed_discourse(self) -> list[Line]:
         file_name = self.get_transcribed_discourse_file_name()
         with open(file_name, "r") as file:
             content = file.read()
 
         transcription = process_transcription(content)
-        return " ".join([line.text for line in transcription])
-
-
-@dataclass
-class Line():
-    line_number: int = -1
-    time: str = ""
-    text: str = ""
+        return transcription
 
 
 def process_transcription(data: str) -> list[Line]:
@@ -95,6 +96,9 @@ def process_transcription(data: str) -> list[Line]:
 
         if re.match(r"^\d{2}:\d{2}:\d{2}", line):
             current_line.time = line
+            time_str = line.split(",")[0]
+            time_parts = reversed(time_str.split(":"))
+            current_line.seconds = sum(int(x) * 60 ** i for i, x in enumerate(time_parts))
             continue
 
         current_line.text = line
@@ -158,12 +162,13 @@ def set_relative_path_to_file(root_dir_path: str):
         day.set_relative_path_to_file(root_dir_path)
 
 
-def generate_pages(env: Environment):
+def generate_pages(env: Environment, update_cached_pages: bool = False):
     current_search_path = str(env.loader.searchpath[0]) # type: ignore
     relative_path = dir_path.replace(current_search_path, "")
 
     for i, day in enumerate(days):
-        # day.update_cached_transcribed_discourse()
+        if update_cached_pages:
+            day.update_cached_transcribed_discourse()
         # transcribed_discourse_url = day.get_transcribed_discourse_url("cached")
         transcribed_content = day.get_transcribed_discourse()
 
@@ -173,11 +178,11 @@ def generate_pages(env: Environment):
         next_day = None if i == len(days) - 1 else days[i + 1]
 
         with open(day.get_build_file_name_absolute(), "w") as file:
-            data = {
+            data: Any = {
                 "title": day.title(),
                 "youtube_video_url": day.youtube_url,
                 # "transcribed_discourse_url": transcribed_discourse_url,
-                "transcribed_content": transcribed_content,
+                "transcribed_data": json.dumps([asdict(l) for l in transcribed_content]),
                 "previous_page_url": previous_day.relative_path_to_file if previous_day else "",
                 "next_page_url": next_day.relative_path_to_file if next_day else "",
             }

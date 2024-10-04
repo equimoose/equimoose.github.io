@@ -1,4 +1,5 @@
 import os
+from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -18,7 +19,7 @@ set_relative_path_to_file(dir_path)
 for template, output_file_path in templates_to_render:
     template = env.get_template(template)
     with open(output_file_path, "w") as file:
-        data = {
+        data: Any = {
             "is_index": True,
             "links": days,
         }

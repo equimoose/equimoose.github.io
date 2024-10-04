@@ -19,13 +19,288 @@
     ></iframe>
 </div> -->
 
+<style>
+    /* #content {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    } */
+    span.line {
+        padding: 2px;
+        margin: 2px;
+        border: 1px solid rgba(0,0,0,0);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.5s;
+    }
+    span:hover {
+        border: 1px solid grey;
+    }
+
+    span.line span.space {
+        font-size: 0px;
+    }
+
+    ::selection { background: #ffe88a; }
+    ::-moz-selection { background: #ffe88a; }
+    .selection { background: #ffe88a; }
+
+    .dropdown-item
+    {
+        cursor: pointer;
+        user-select: none;
+    }
+</style>
+
 <!-- Watch on YouTube Link -->
 <div class="video-container">
     <p><a href="{{ youtube_video_url }}" target="_blank">Watch on youtube</a></p>
 </div>
 
+<div id="content" class="mb-5"></div>
 
-<div id="content" class="mb-5">{{ transcribed_content }}</div>
+
+<!-- Context Menu -->
+<div class="dropdown" id="context_menu" style="display: none; position: absolute;">
+    <!-- <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdown_menu_button" data-bs-toggle="dropdown" aria-expanded="true">
+        Options
+    </button> -->
+    <ul class="dropdown-menu show" aria-labelledby="dropdown_menu_button">
+        <li class="dropdown-item" id="copy_text">Copy Text</li>
+        <li class="dropdown-item" id="copy_url_to_text">Copy URL to this Text</li>
+        <li class="dropdown-item" id="copy_url_to_video">Copy URL to Video</li>
+        <li class="dropdown-item" id="open_url_to_video">Open URL to Video</li>
+    </ul>
+</div>
+
+
+<script type="text/javascript">
+    const youtube_video_url = "{{ youtube_video_url }}";
+    const transcribed_data = {{ transcribed_data }};
+
+    const content = document.getElementById("content")
+
+    let current_selection = parse_url_for_selection()
+
+    create_transcribed_text(transcribed_data)
+    highlight_text(current_selection)
+    scroll_to_selection(current_selection)
+
+    function create_transcribed_text(transcribed_data)
+    {
+        transcribed_data.forEach(data => {
+            const { line_number, text, seconds } = data
+            const span_el = document.createElement("span")
+            span_el.classList.add("line")
+            span_el.id = `line_${line_number}`
+            span_el.innerHTML = `${text}<span class="space"> </span>`
+            span_el.onclick = (event) => clicked_on_text(event, data)
+            content.appendChild(span_el)
+        })
+    }
+
+
+    function parse_url_for_selection()
+    {
+        const url = new URL(window.location.href)
+        const search_params = url.searchParams
+        const start = search_params.get("start")
+        const end = search_params.get("end")
+
+        if (start === null || end === null)
+        {
+            return null
+        }
+
+        return {start: parseInt(start), end: parseInt(end)}
+    }
+
+
+    function clicked_on_text(event, data)
+    {
+        const { line_number, text, seconds } = data
+        const url_to_video_of_selection = `${youtube_video_url}&t=${seconds}s`
+
+        modify_current_selection(event.shiftKey, line_number)
+        update_page_url_params_with_selection(current_selection)
+        highlight_text(current_selection)
+        update_context_menu_position_and_visibility(current_selection, url_to_video_of_selection)
+    }
+
+
+    function modify_current_selection(shift_key_depressed, line_number)
+    {
+        // If no selection, start new selection
+        if (current_selection === null)
+        {
+            current_selection = {start: line_number, end: line_number}
+        }
+        else if (shift_key_depressed)
+        {
+            // If shift key pressed, grow selection
+            if (line_number < current_selection.start)
+            {
+                current_selection.start = line_number
+            }
+            else if (line_number > current_selection.end)
+            {
+                current_selection.end = line_number
+            }
+            else
+            {
+                // shift key was pressed but line that was clicked was with in
+                // the current selection.
+                current_selection = null
+            }
+        }
+        else
+        {
+            // Shift key not pressed
+            if (current_selection.start === current_selection.end && current_selection.start === line_number)
+            {
+                // If selection is a single line and equal to current clicked line, clear selection
+                current_selection = null
+            }
+            else
+            {
+                // If selection is a range, or is a single line different to the
+                // line clicked on then clear selection and start a new selection.
+                current_selection = {start: line_number, end: line_number}
+            }
+        }
+    }
+
+
+    function update_page_url_params_with_selection(current_selection)
+    {
+        const url = new URL(window.location.href)
+        const search_params = url.searchParams
+        if (current_selection === null)
+        {
+            search_params.delete("start")
+            search_params.delete("end")
+        }
+        else
+        {
+            search_params.set("start", current_selection.start)
+            search_params.set("end", current_selection.end)
+        }
+
+        const new_url = url.toString()
+        window.history.pushState({}, "", new_url)
+    }
+
+
+    function highlight_text(current_selection)
+    {
+        const elements_with_selection_class = document.querySelectorAll(".selection")
+        elements_with_selection_class.forEach(element => {
+            element.classList.remove("selection")
+        })
+
+        const selection = window.getSelection()
+        selection.removeAllRanges()
+
+        const elements = get_elements_currently_selected(current_selection)
+
+        elements.forEach(element => {
+            const range = document.createRange()
+            range.selectNodeContents(element)
+            selection.addRange(range)
+
+            element.classList.add("selection")
+        })
+    }
+
+
+    function scroll_to_selection(current_selection)
+    {
+        const elements = get_elements_currently_selected(current_selection)
+        if (elements.length === 0) return
+
+        const first_element = elements[0]
+        const first_element_box = first_element.getBoundingClientRect()
+        const first_element_top = first_element_box.top
+        const top = first_element_top - (window.innerHeight / 2)
+        window.scrollTo(0, top)
+    }
+
+
+    function get_elements_currently_selected(current_selection)
+    {
+        const elements = current_selection === null ? [] : Array.from(document.querySelectorAll("span")).filter(span => {
+            const line_number = parseInt(span.id.split("_")[1])
+            return line_number >= current_selection.start && line_number <= current_selection.end
+        })
+
+        return elements
+    }
+
+
+    function update_context_menu_position_and_visibility(current_selection, url_to_video_of_selection)
+    {
+        const context_menu_el = document.getElementById("context_menu")
+        if (current_selection === null)
+        {
+            context_menu_el.style.display = "none"
+            return
+        }
+
+        context_menu_el.style.display = "block"
+        // const context_menu_box = context_menu_el.getBoundingClientRect()
+        const context_menu_box = context_menu_el.children[0].getBoundingClientRect()
+
+        const last_line_element = document.getElementById(`line_${current_selection.end}`)
+        const position = get_absolute_position(last_line_element, -context_menu_box.width/2)
+
+        context_menu_el.style.left = `${position.x}px`
+        context_menu_el.style.top = `${position.y}px`
+
+        document.getElementById("copy_text").onclick = () => copy_text(current_selection)
+        document.getElementById("copy_url_to_text").onclick = () => copy_to_clipboard(document.URL, "URL to text")
+        document.getElementById("copy_url_to_video").onclick = () => copy_to_clipboard(url_to_video_of_selection, "URL to video")
+        document.getElementById("open_url_to_video").onclick = () => window.open(url_to_video_of_selection, "_blank")
+    }
+
+    function get_absolute_position(element, x_offset)
+    {
+        const box = element.getBoundingClientRect()
+        let x = box.x + (box.width / 2) + x_offset
+        let y = box.height
+        while (element)
+        {
+            // console.log(x, element.offsetLeft, element.scrollLeft, element.clientLeft)
+            // x += element.offsetLeft - element.scrollLeft + element.clientLeft
+            // console.log(x)
+            y += element.offsetTop - element.scrollTop + element.clientTop
+            element = element.offsetParent
+        }
+        return { x, y }
+    }
+
+    function copy_text(current_selection) {
+        const selected_text = []
+        for (let i = current_selection.start; i <= current_selection.end; ++i)
+        {
+            const line_element = document.getElementById(`line_${i}`)
+            if (line_element)
+            {
+                selected_text.push(line_element.textContent.trim())
+            }
+        }
+
+        const text_to_copy = selected_text.join(" ")
+        copy_to_clipboard(text_to_copy, "text from page")
+    }
+
+    function copy_to_clipboard(text, description) {
+        navigator.clipboard.writeText(text).then(() => {
+            console.log(`${description} copied to clipboard`)
+        }).catch(err => {
+            console.error(`Failed to copy ${description}: `, err)
+        });
+    }
+</script>
 
 <!-- <script>
     const transcribed_discourse_url = "{{ transcribed_discourse_url }}"

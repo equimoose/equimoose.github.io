@@ -5,3 +5,4 @@ Site at: https://equimoose.github.io/
 
     source make_venv.sh
     python generate_site.py
+    python -m http.server
